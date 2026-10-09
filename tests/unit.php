@@ -1,0 +1,12 @@
+<?php
+if(PHP_SAPI!=='cli')exit;
+$GLOBALS['config']=['base_url'=>'https://travel.example'];require dirname(__DIR__).'/app/functions.php';
+function expect(bool $condition,string $label): void {if(!$condition){fwrite(STDERR,'FAIL: '.$label.PHP_EOL);exit(1);}echo 'PASS: '.$label.PHP_EOL;}
+$p=['name'=>'Ooty & Coorg / café','duration_days'=>3,'slug'=>'ooty-coorg'];
+$message=package_message($p,['name'=>'Asha & Arun','departure_city'=>'Chennai','travel_date'=>date('Y-m-d'),'adults'=>'2','children'=>'0','message'=>'']);
+expect(str_contains($message,'Children: 0'),'zero children included');expect(!str_contains($message,'Message:'),'empty optional message omitted');expect(str_contains($message,'Name: Asha & Arun'),'provided customer name');expect(str_contains($message,'Package: Ooty & Coorg / café'),'Unicode selected package preserved');expect(rawurldecode(rawurlencode($message))===$message,'message encoding round trip');expect(str_contains(rawurlencode($message),'%0A'),'line breaks encoded');
+$direct=package_message($p);expect(!str_contains($direct,'Name:')&&!str_contains($direct,'Adults:'),'card message excludes customer fields');expect(str_contains($direct,'Package Link: https://travel.example/index.php?route=package%2Footy-coorg'),'canonical package context');
+expect(phone_valid('919876543210'),'country-code digits accepted');foreach(['','+919876543210','91 9876543210','0000000000','123','9123456789012345'] as $n)expect(!phone_valid($n),'invalid Booking number rejected');
+$valid=['name'=>'Asha','departure_city'=>'Chennai','travel_date'=>date('Y-m-d'),'adults'=>'2','children'=>'0'];[, $errors]=validated_travel($valid,false);expect(!$errors,'valid booking accepted');
+foreach([['adults'=>'0'],['children'=>'-1'],['travel_date'=>'2026-02-30'],['travel_date'=>'2000-01-01'],['name'=>'']] as $override){[, $errors]=validated_travel(array_replace($valid,$override),false);expect((bool)$errors,'invalid booking rejected');}
+$enquiry=['full_name'=>'Asha','mobile'=>'+91 9876543210','email'=>'','interest'=>'Ooty','departure_city'=>'Chennai','travel_date'=>date('Y-m-d'),'adults'=>'2','children'=>'0'];[, $errors]=validated_travel($enquiry,true);expect(!$errors,'valid enquiry and optional email accepted');[, $errors]=validated_travel(array_replace($enquiry,['email'=>'bad@']),true);expect((bool)$errors,'invalid optional email rejected');expect(e('<script>')==='&lt;script&gt;','displayed content escaped');echo 'All unit checks passed.'.PHP_EOL;

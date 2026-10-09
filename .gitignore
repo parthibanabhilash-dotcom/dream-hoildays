@@ -1,0 +1,13 @@
+config/config.php
+storage/*
+!storage/.gitkeep
+!storage/.htaccess
+public/media/*
+!public/media/.htaccess
+.env
+.env.*
+*.log
+*.bak
+*.dump
+*.pem
+*.key
