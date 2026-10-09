@@ -80,3 +80,7 @@ The About page includes a scenic hero, introduction, travel-preference cards, pl
 ## Public page guidance and imagery
 
 Packages, Services, Vehicles, Gallery and Contact include editorial planning guidance, scenic photographs and FAQs. Existing approved database records, filters, Booking controls and the enquiry form remain in their original flows. Guide cards do not represent published packages or confirmed vehicle availability. Gallery inspiration images are explicitly separate from approved business photography and use the same accessible image dialog. Existing optimized local photographs are reused; no remote image requests or new JavaScript library is introduced. page-guides.css loads only on these five routes. Manage real listings/photos and business contact details through admin as before.
+
+## Vercel deployment
+
+See [VERCEL.md](VERCEL.md) for PHP runtime routing, external TLS MySQL, persistent database sessions, Cloudinary image uploads and environment-variable setup. The Vercel static build includes assets only. Existing cPanel/local installations keep file sessions and local processed images unless configured otherwise.

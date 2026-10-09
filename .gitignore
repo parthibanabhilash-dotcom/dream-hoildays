@@ -11,3 +11,5 @@ public/media/*
 *.dump
 *.pem
 *.key
+.vercel/
+vercel-static/

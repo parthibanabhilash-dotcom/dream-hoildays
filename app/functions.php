@@ -1,9 +1,12 @@
 <?php
+require_once __DIR__.'/cloud-media.php';
 class HttpError extends RuntimeException {}
 function e($value): string { return htmlspecialchars((string)$value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); }
 function db(): PDO {
  static $pdo;
- if (!$pdo) { $c = $GLOBALS['config']; $pdo = new PDO($c['db_dsn'], $c['db_user'], $c['db_password'], [PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION,PDO::ATTR_DEFAULT_FETCH_MODE=>PDO::FETCH_ASSOC,PDO::ATTR_EMULATE_PREPARES=>false]); }
+ if (!$pdo) { $c = $GLOBALS['config'];$options=[PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION,PDO::ATTR_DEFAULT_FETCH_MODE=>PDO::FETCH_ASSOC,PDO::ATTR_EMULATE_PREPARES=>false];
+ if(!empty($c['db_ssl_required'])){ $ca=$c['db_ssl_ca']??'';if(!str_contains($ca,'-----BEGIN CERTIFICATE-----'))throw new RuntimeException('A database CA certificate is required.');$path=sys_get_temp_dir().'/tdh-db-ca-'.hash('sha256',$ca).'.pem';if(!is_file($path)&&file_put_contents($path,$ca)===false)throw new RuntimeException('Database TLS setup failed.');$options[PDO::MYSQL_ATTR_SSL_CA]=$path;$options[PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT]=true; }
+ $pdo = new PDO($c['db_dsn'], $c['db_user'], $c['db_password'], $options); }
  return $pdo;
 }
 function query(string $sql, array $args=[]): PDOStatement { $s=db()->prepare($sql); $s->execute($args); return $s; }
@@ -29,7 +32,7 @@ function package_message(array $p,array $details=[]): string {
 function contact_alternative(): string { $p=setting('phone');$mail=setting('email'); if(preg_match('/^\+?[0-9 ()-]{8,25}$/D',$p))return '<span class="help">Booking chat is unavailable. <a href="tel:'.e(preg_replace('/[^+0-9]/','',$p)).'">Call our team</a>.</span>';if(filter_var($mail,FILTER_VALIDATE_EMAIL))return '<span class="help">Booking chat is unavailable. <a href="mailto:'.e($mail).'">Email our team</a>.</span>';return '<span class="help">Booking contact details are awaiting business approval. Please use our <a href="'.e(url('contact')).'">website enquiry form</a>.</span>'; }
 function booking_button(string $message): string { $u=whatsapp($message);return $u?'<a class="button booking" href="'.e($u).'" target="_blank" rel="noopener noreferrer">Booking</a>':'<button class="button booking" disabled>Booking</button>'.contact_alternative(); }
 function media_for(string $type,int $id): array { return rows('SELECT * FROM media WHERE owner_type=? AND owner_id=? AND status=? ORDER BY sort_order,id',[$type,$id,'published']); }
-function picture(?array $m,string $class=''): string { if(!$m)return '<div class="image-placeholder '.e($class).'" role="img" aria-label="Photograph awaiting approval"><span>Photograph awaiting approval</span></div>';return '<img class="'.e($class).'" src="'.e(asset('media/'.$m['filename'])).'" alt="'.e($m['alt_text']).'" width="1200" height="800" loading="lazy">'; }
+function picture(?array $m,string $class=''): string { if(!$m)return '<div class="image-placeholder '.e($class).'" role="img" aria-label="Photograph awaiting approval"><span>Photograph awaiting approval</span></div>';return '<img class="'.e($class).'" src="'.e(media_url($m['filename'])).'" alt="'.e($m['alt_text']).'" width="1200" height="800" loading="lazy">'; }
 function rate_limit(string $scope,int $limit,int $seconds): bool {
  $bucket=hash('sha256',$scope.'|'.($_SERVER['REMOTE_ADDR']??'local'));$now=time();
  query('INSERT INTO rate_limits(bucket,attempts,expires_at) VALUES(?,1,?) ON DUPLICATE KEY UPDATE attempts=IF(expires_at<=?,1,attempts+1),expires_at=IF(expires_at<=?,VALUES(expires_at),expires_at)',[$bucket,$now+$seconds,$now,$now]);
@@ -54,8 +57,8 @@ function public_dir(): string { return $GLOBALS['config']['public_dir']??dirname
 
 function brand_markup(): string {
  $file=setting('logo_filename');
- if(preg_match('/^[a-f0-9]{40}\.webp$/D',$file)&&is_file(public_dir().'/media/'.$file))
-  return '<img class="business-logo" src="'.e(asset('media/'.$file)).'" alt="The Dream Holidays — Travel / Transportation" width="190" height="76">';
+ if(preg_match('/^[a-f0-9]{40}\.webp$/D',$file)&&((($GLOBALS['config']['media_driver']??'local')==='cloudinary'&&cloud_media_ready())||is_file(public_dir().'/media/'.$file)))
+  return '<img class="business-logo" src="'.e(media_url($file)).'" alt="The Dream Holidays — Travel / Transportation" width="190" height="76">';
  foreach(['business-logo.png','business-logo.webp'] as $logo)if(is_file(public_dir().'/assets/'.$logo))
   return '<img class="business-logo" src="'.e(asset('assets/'.$logo)).'" alt="The Dream Holidays — Travel / Transportation" width="190" height="76">';
  return '<img src="'.e(asset('assets/logo.svg')).'" alt="" width="44" height="44"><span>The Dream <strong>Holidays</strong><small>Travel · Explore · Connect</small></span>';

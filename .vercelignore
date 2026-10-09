@@ -1,0 +1,9 @@
+config/config.php
+storage
+public/media
+tests
+vercel-static
+.git
+.env*
+*.zip
+*.log
