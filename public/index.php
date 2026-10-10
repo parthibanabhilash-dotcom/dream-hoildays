@@ -7,7 +7,7 @@ try{
  elseif(is_file($root.'/config/config.php'))$config=require $root.'/config/config.php';
  else throw new RuntimeException('Private configuration is missing.');
  $GLOBALS['config']=$config;
-}catch(Throwable $error){error_log('Website configuration is incomplete.');http_response_code(503);header('Content-Type: text/html; charset=utf-8');header('Cache-Control: no-store');echo '<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Setup in progress | The Dream Holidays</title><link rel="stylesheet" href="/assets/style.css"><main class="container page-heading"><h1>Your next journey is taking shape.</h1><p>The Dream Holidays website setup is in progress. Please check back shortly.</p></main></html>';exit;}
+}catch(Throwable $error){error_log('Website configuration is incomplete. '.($error instanceof RuntimeException ? $error->getMessage() : 'Configuration could not be loaded.'));http_response_code(503);header('Content-Type: text/html; charset=utf-8');header('Cache-Control: no-store');echo '<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Setup in progress | The Dream Holidays</title><link rel="stylesheet" href="/assets/style.css"><main class="container page-heading"><h1>Your next journey is taking shape.</h1><p>The Dream Holidays website setup is in progress. Please check back shortly.</p></main></html>';exit;}
 date_default_timezone_set($config['timezone']??'Asia/Kolkata');
 require $root.'/app/functions.php';
 try {
