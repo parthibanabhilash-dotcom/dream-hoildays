@@ -2,6 +2,7 @@
 /** Explain the same publication rules used by the public templates. */
 function content_visibility(string $entity,array $record): array {
  if(isset($record['status'])&&$record['status']!=='published')return ['Draft — not on the website','Select Published, confirm approval and save to show this content.',''];
+ if($entity==='services'||($entity==='media'&&($record['owner_type']??'')==='services'))return ['Saved — Services page removed','Services content is stored in admin and is not shown on the public website.',''];
  if($entity==='packages')return ['Published — on the Packages page',empty($record['featured'])?'Enable Featured to also show this package on the homepage.':'This package is also featured on the homepage.',url('package/'.$record['slug'])];
  if($entity==='media'){
   $owner=$record['owner_type'];
