@@ -6,7 +6,7 @@ $entities=[
  'services'=>['label'=>'Services','fields'=>['name'=>'text','slug'=>'slug','description'=>'textarea','status'=>['draft','published']]],
  'vehicles'=>['label'=>'Vehicles','fields'=>['name'=>'text','slug'=>'slug','category'=>['Car','Van','Bus'],'seating'=>'positive','air_conditioning'=>['AC','Non-AC'],'luggage'=>'textarea','amenities'=>'textarea','rental_terms'=>'textarea','status'=>['draft','published']]],
  'gallery_categories'=>['label'=>'Gallery categories','fields'=>['name'=>'text']],
- 'media'=>['label'=>'Images & gallery','fields'=>['owner_type'=>['packages','services','vehicles','gallery','team'],'owner_id'=>'owner','gallery_category_id'=>'gallery_category','alt_text'=>'text','credit'=>'text','license_url'=>'optional_url','sort_order'=>'order','status'=>['draft','published']]],
+ 'media'=>['label'=>'Images & gallery','fields'=>['owner_type'=>['packages','services','vehicles','gallery','team'],'owner_id'=>'owner','gallery_category_id'=>'gallery_category','alt_text'=>'text','sort_order'=>'order','status'=>['draft','published']]],
  'reviews'=>['label'=>'Verified reviews','fields'=>['customer_name'=>'text','review_text'=>'textarea','rating'=>['1','2','3','4','5'],'verification_note'=>'textarea','verified'=>'checkbox','status'=>['draft','published']]],
  'pages'=>['label'=>'Pages & policies','fields'=>['slug'=>'slug','title'=>'text','body'=>'textarea','meta_description'=>'text','status'=>['draft','published']]],
 ];
@@ -45,7 +45,7 @@ function validate_entity(string $entity,array $fields): array {
  if($entity==='media'){
  if(in_array($data['owner_type'],['packages','services','vehicles'],true)&&!one('SELECT id FROM '.$data['owner_type'].' WHERE id=?',[$data['owner_id']]))throw new InvalidArgumentException('Enter the ID of an existing content record for this image.');
  if(in_array($data['owner_type'],['gallery','team'],true))$data['owner_id']=0;
- if($data['status']==='published'&&$data['credit']==='')throw new InvalidArgumentException('Record the photo source/ownership before publishing.');
+
  }
  if(($data['status']??'')==='published'){
  if(empty($_POST['approved']))throw new InvalidArgumentException('Confirm business approval before publishing.');
@@ -117,7 +117,7 @@ if(isset($entities[$entity])){
  $imageOwners=$entity==='media'?lock_image_owners([$record]):[];if($entity==='media'){$current=one('SELECT * FROM media WHERE id=? FOR UPDATE',[$id]);if(!$current||$current['owner_type']!==$record['owner_type']||$current['owner_id']!==$record['owner_id'])throw new InvalidArgumentException('This image changed. Reload the editor and try again.');$files=[['filename'=>$current['filename']]];}if(in_array($entity,['packages','services','vehicles'],true))query('DELETE FROM media WHERE owner_type=? AND owner_id=?',[$entity,$id]);query('DELETE FROM '.$entity.' WHERE id=?',[$id]);assert_listing_images($imageOwners);db()->commit();foreach($files as $f)delete_image_file($f['filename']);flash('Record deleted.');redirect('admin/'.$entity);
  }
  $data=validate_entity($entity,$def['fields']);
- if($entity==='media'){$newImage=upload_image();if(!$record&&!$newImage)throw new InvalidArgumentException('Choose an image file.');if($newImage)$data['filename']=$newImage;}
+ if($entity==='media'){if(!$record)$data+=['credit'=>'','license_url'=>''];$newImage=upload_image();if(!$record&&!$newImage)throw new InvalidArgumentException('Choose an image file.');if($newImage)$data['filename']=$newImage;}
  if(in_array($entity,['packages','vehicles'],true)&&($data['status']??'')==='published'&&!media_for($entity,$id))throw new InvalidArgumentException('Save as a draft, upload and publish an approved image, then publish this listing.');
  $imageOwners=$entity==='media'?lock_image_owners([$record,$data]):[];if($entity==='media'&&$record){$current=one('SELECT * FROM media WHERE id=? FOR UPDATE',[$id]);if(!$current||$current['owner_type']!==$record['owner_type']||$current['owner_id']!==$record['owner_id'])throw new InvalidArgumentException('This image changed. Reload the editor and try again.');$record=$current;}
  $columns=array_keys($data);if($record){query('UPDATE '.$entity.' SET '.implode(',',array_map(fn($key)=>$key.'=?',$columns)).' WHERE id=?',[...array_values($data),$id]);}else{query('INSERT INTO '.$entity.' ('.implode(',',$columns).') VALUES('.implode(',',array_fill(0,count($columns),'?')).')',array_values($data));$id=(int)db()->lastInsertId();}
@@ -125,7 +125,7 @@ if(isset($entities[$entity])){
  }catch(InvalidArgumentException $ex){if(db()->inTransaction())db()->rollBack();if($newImage)delete_image_file($newImage);$error=$ex->getMessage();}catch(Throwable $ex){if(db()->inTransaction())db()->rollBack();if($newImage)delete_image_file($newImage);if($ex instanceof HttpError)throw $ex;error_log((string)$ex);$error='Could not save. Check that the slug/name or day number is unique, and referenced records exist.';}}
  admin_head($def['label']);if($error)admin_error($error);
  if(in_array($action,['new','edit'],true)||$isPost){echo '<p><a href="'.e(url('admin/'.$entity)).'">← Back to list</a></p><form method="post" enctype="multipart/form-data"><div class="form-grid">'.csrf_field();
- foreach($def['fields'] as $name=>$type){$v=$_POST[$name]??($record[$name]??'');if($type==='checkbox'&&$isPost)$v=isset($_POST[$name]);echo '<label>'.e($name==='license_url'?'Licence URL':ucwords(str_replace('_',' ',$name)));
+ foreach($def['fields'] as $name=>$type){$v=$_POST[$name]??($record[$name]??'');if($type==='checkbox'&&$isPost)$v=isset($_POST[$name]);echo '<label>'.e(ucwords(str_replace('_',' ',$name)));
  if(is_array($type)){echo '<select name="'.e($name).'">';foreach($type as $option)echo '<option value="'.e($option).'" '.((string)$v===(string)$option?'selected':'').'>'.e(ucfirst($option)).'</option>';echo '</select>';}
  elseif($type==='package'||$type==='gallery_category'){echo '<select name="'.e($name).'">';if($type==='gallery_category')echo '<option value="">None</option>';foreach(rows('SELECT id,name FROM '.($type==='package'?'packages':'gallery_categories').' ORDER BY id') as $opt)echo '<option value="'.e($opt['id']).'" '.((string)$v===(string)$opt['id']?'selected':'').'>#'.e($opt['id']).' '.e($opt['name']).'</option>';echo '</select>';}
  elseif($type==='textarea')echo '<textarea name="'.e($name).'" rows="5" maxlength="20000">'.e($v).'</textarea>';

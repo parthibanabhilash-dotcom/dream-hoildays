@@ -8,12 +8,12 @@ function assert_listing_images(array $owners): void {
  foreach($owners as [$type,$id]){ $listing=one('SELECT status FROM '.$type.' WHERE id=?',[$id]);if($listing&&$listing['status']==='published'&&!(int)query("SELECT COUNT(*) FROM media WHERE owner_type=? AND owner_id=? AND status='published'",[$type,$id])->fetchColumn())throw new InvalidArgumentException('Add another approved published image, or save the listing as a draft, before removing its last published image.'); }
 }
 /** Package-scoped image management; never accepts an arbitrary media owner. */
-function package_image_data(): array {
- $alt=trim((string)($_POST['alt_text']??''));$credit=trim((string)($_POST['credit']??''));$license=trim((string)($_POST['license_url']??''));$status=(string)($_POST['image_status']??'draft');
+function package_image_data(?array $image=null): array {
+ $alt=trim((string)($_POST['alt_text']??''));$credit=(string)($image['credit']??'');$license=(string)($image['license_url']??'');$status=(string)($_POST['image_status']??'draft');
  $order=filter_var($_POST['sort_order']??0,FILTER_VALIDATE_INT,['options'=>['min_range'=>0,'max_range'=>100000]]);
- if($alt===''||strlen($alt)>255||strlen($credit)>255||strlen($license)>1000||$order===false||!in_array($status,['draft','published'],true))throw new InvalidArgumentException('Provide an image description, a valid display order and a status. Text must be within the displayed limits.');
- if($license!==''&&(!filter_var($license,FILTER_VALIDATE_URL)||!str_starts_with($license,'https://')))throw new InvalidArgumentException('Photo licence link must use HTTPS.');
- if($status==='published'&&($credit===''||empty($_POST['photo_approved'])))throw new InvalidArgumentException('Record photo ownership/source and confirm approval before publishing the image.');
+ if($alt===''||strlen($alt)>255||$order===false||!in_array($status,['draft','published'],true))throw new InvalidArgumentException('Provide an image description, a valid display order and a status. Text must be within the displayed limits.');
+
+ if($status==='published'&&empty($_POST['photo_approved']))throw new InvalidArgumentException('Confirm approval before publishing the image.');
  return [$alt,$credit,$license,$order,$status];
 }
 function handle_package_images(array $package): void {
@@ -35,7 +35,7 @@ function handle_package_images(array $package): void {
   }
   $image=$operation==='upload'?null:one("SELECT * FROM media WHERE id=? AND owner_type='packages' AND owner_id=? FOR UPDATE",[(int)($_POST['image_id']??0),$package['id']]);
   if($operation!=='upload'&&!$image)throw new InvalidArgumentException('This image does not belong to the selected package.');
-  $data=$operation==='delete'?null:package_image_data();
+  $data=$operation==='delete'?null:package_image_data($image);
   if($operation==='delete'){query('DELETE FROM media WHERE id=?',[$image['id']]);$old=$image['filename'];}
   else{
    $new=upload_image();if($operation==='upload'&&!$new)throw new InvalidArgumentException('Choose a JPEG, PNG or WebP image.');
@@ -46,7 +46,7 @@ function handle_package_images(array $package): void {
  }catch(Throwable $ex){if(db()->inTransaction())db()->rollBack();if($new)delete_image_file($new);if($ex instanceof HttpError)throw $ex;$error=$ex instanceof InvalidArgumentException?$ex->getMessage():'Could not save the image. Please try again.';if(!$ex instanceof InvalidArgumentException)error_log((string)$ex);admin_head('Package images');admin_error($error);echo '<a class="button" href="'.e(url('admin/packages/edit/'.$package['id'])).'#package-images">Back to package images</a>';admin_end();}
 }
 function package_image_fields(?array $image=null,int $order=0): void {
- echo '<div class="form-grid"><label>Image description (alt text)<input name="alt_text" required maxlength="255" value="'.e($image['alt_text']??'').'"></label><label>Photo source / owner<input name="credit" maxlength="255" value="'.e($image['credit']??'').'"><small>Required for publication. Use the actual owner or licensed source.</small></label><label>Licence link (optional)<input type="url" name="license_url" maxlength="1000" value="'.e($image['license_url']??'').'"></label><label>Display order<input type="number" name="sort_order" min="0" max="100000" required value="'.e($image['sort_order']??$order).'"><small>Lower numbers appear first. The first published image is the cover.</small></label><label>Image status<select name="image_status"><option value="draft">Draft</option><option value="published" '.(($image['status']??'')==='published'?'selected':'').'>Published</option></select></label><label>'.($image?'Replace image (optional)':'Choose package image').'<input data-photo-upload type="file" data-max-bytes="'.(upload_limit_mb()*1024*1024).'" name="image" accept="image/jpeg,image/png,image/webp" '.(!$image?'required':'').'><small>JPEG, PNG or WebP. Maximum '.upload_limit_mb().' MB / 16 megapixels.</small></label><label class="full approval"><input type="checkbox" name="photo_approved" value="1"> This photograph and its usage rights are business-approved for publication.</label></div>';
+ echo '<div class="form-grid"><label>Image description (alt text)<input name="alt_text" required maxlength="255" value="'.e($image['alt_text']??'').'"></label><label>Display order<input type="number" name="sort_order" min="0" max="100000" required value="'.e($image['sort_order']??$order).'"><small>Lower numbers appear first. The first published image is the cover.</small></label><label>Image status<select name="image_status"><option value="draft">Draft</option><option value="published" '.(($image['status']??'')==='published'?'selected':'').'>Published</option></select></label><label>'.($image?'Replace image (optional)':'Choose package image').'<input data-photo-upload type="file" data-max-bytes="'.(upload_limit_mb()*1024*1024).'" name="image" accept="image/jpeg,image/png,image/webp" '.(!$image?'required':'').'><small>JPEG, PNG or WebP. Maximum '.upload_limit_mb().' MB / 16 megapixels.</small></label><label class="full approval"><input type="checkbox" name="photo_approved" value="1"> This photograph and its usage rights are business-approved for publication.</label></div>';
 }
 function package_images_panel(array $package): void {
  $images=rows("SELECT * FROM media WHERE owner_type='packages' AND owner_id=? ORDER BY sort_order,id",[$package['id']]);$endpoint=e(url('admin/packages/photos/'.$package['id']));
