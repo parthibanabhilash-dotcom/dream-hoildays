@@ -2,11 +2,11 @@ import * as THREE from './vendor/three.module.js';
 
 // Original lightweight models; no downloaded models or textures.
 const materials = {
-  yellow: new THREE.MeshStandardMaterial({ color: 0xffcf48, roughness: .45 }),
-  navy: new THREE.MeshStandardMaterial({ color: 0x102f43, roughness: .6 }),
-  glass: new THREE.MeshStandardMaterial({ color: 0x157f92, metalness: .2, roughness: .25 }),
+  yellow: new THREE.MeshStandardMaterial({ color: 0x4cc58b, roughness: .45 }),
+  navy: new THREE.MeshStandardMaterial({ color: 0x1e3025, roughness: .6 }),
+  glass: new THREE.MeshStandardMaterial({ color: 0x1e3025, metalness: .2, roughness: .25 }),
   white: new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: .5 }),
-  teal: new THREE.MeshStandardMaterial({ color: 0x11aba1, roughness: .4 }),
+  teal: new THREE.MeshStandardMaterial({ color: 0x2b7050, roughness: .4 }),
 };
 function box(group, size, position, material) {
   const mesh = new THREE.Mesh(new THREE.BoxGeometry(...size), materials[material]);
