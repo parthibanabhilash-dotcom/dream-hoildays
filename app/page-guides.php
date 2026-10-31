@@ -17,9 +17,10 @@ function page_guide_intro(string $route): void {
  foreach($g[5] as $i=>[$title,$body]){
   $vehicle=$route==='vehicles';$vehicleKeys=['car','van','bus','jeep'];
   echo '<article class="guide-card'.($vehicle?' vehicle-category-card':'').'">';
-  if($vehicle)echo '<img class="vehicle-category-image" src="'.e(asset('assets/vehicle-'.$vehicleKeys[$i].'.webp')).'" alt="'.e($title).' — illustrative vehicle category image" width="768" height="512" loading="lazy">';
+  if($vehicle)echo '<img class="vehicle-category-image" src="'.e(asset('assets/vehicle-'.$vehicleKeys[$i].'.webp')).'" alt="'.e($title).' — illustrative vehicle category image" width="768" height="512" loading="lazy"><div class="vehicle-category-body">';
   echo '<span class="guide-number">0'.($i+1).'</span><h3>'.e($title).'</h3><p>'.e($body).'</p>';
   if($vehicle){$contact=url('contact');echo '<a class="text-link" href="'.e($contact.(str_contains($contact,'?')?'&':'?').'interest='.rawurlencode($title.' rental')).'#enquiry">Enquire about '.e(strtolower($title)).' →</a>';}
+  if($vehicle)echo '</div>';
   echo '</article>';
  }echo '</section>';
  if($route==='vehicles')echo '<p class="container help vehicle-image-note">Vehicle category illustrations. Contact us for actual vehicle photos and availability.</p>';
