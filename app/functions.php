@@ -12,7 +12,13 @@ function db(): PDO {
 function query(string $sql, array $args=[]): PDOStatement { $s=db()->prepare($sql); $s->execute($args); return $s; }
 function rows(string $sql,array $args=[]): array { return query($sql,$args)->fetchAll(); }
 function one(string $sql,array $args=[]): ?array { return query($sql,$args)->fetch() ?: null; }
-function setting(string $key,string $fallback=''): string { static $all; if($all===null){$all=array_column(rows('SELECT * FROM settings'),'setting_value','setting_key');} return $all[$key]??$fallback; }
+function setting(string $key,string $fallback=''): string {
+ static $all;
+ if($all===null)$all=array_column(rows('SELECT * FROM settings'),'setting_value','setting_key');
+ $value=$all[$key]??$fallback;
+ if($key==='whatsapp_number'&&trim($value)==='')$value=(string)($GLOBALS['config']['booking_whatsapp_number']??'');
+ return $value;
+}
 function url(string $route=''): string { return rtrim($GLOBALS['config']['base_url'],'/').(($GLOBALS['config']['clean_urls']??false)?'/'.ltrim($route,'/'):'/index.php'.($route!==''?'?route='.rawurlencode($route):'')); }
 function asset(string $path): string { return rtrim($GLOBALS['config']['base_url'],'/').'/'.$path; }
 function redirect(string $route): never { header('Location: '.url($route),true,303); exit; }

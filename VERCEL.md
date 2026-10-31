@@ -38,6 +38,7 @@ Add these in **Vercel → Project → Settings → Environment Variables** for t
 | `TDH_DB_PASSWORD` | Database password (secret) |
 | `TDH_DB_SSL_CA` | Provider CA certificate in PEM format, including BEGIN/END lines and actual line breaks |
 | `TDH_INSTALLATION_TOKEN` | A private random token of at least 32 characters; generate locally |
+| `TDH_WHATSAPP_NUMBER` | Optional booking fallback, country code and digits only; defaults to the owner-approved `916383976429`. A saved admin Booking number takes priority. |
 | `TDH_TIMEZONE` | Optional, defaults to `Asia/Kolkata` |
 | `CLOUDINARY_CLOUD_NAME` | Cloudinary product environment cloud name |
 | `CLOUDINARY_API_KEY` | Cloudinary API key |

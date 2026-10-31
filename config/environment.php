@@ -14,6 +14,8 @@ return [
  'db_user'=>trim($env('TDH_DB_USER')),'db_password'=>$env('TDH_DB_PASSWORD'),
  'db_ssl_ca'=>$env('TDH_DB_SSL_CA'),'db_ssl_required'=>true,
  'base_url'=>$url,'installation_token'=>$env('TDH_INSTALLATION_TOKEN'),
+ // Owner-approved fallback; the admin Booking number takes priority.
+ 'booking_whatsapp_number'=>$env('TDH_WHATSAPP_NUMBER','916383976429'),
  'session_secure'=>true,'session_driver'=>'database','clean_urls'=>true,
  'timezone'=>$env('TDH_TIMEZONE','Asia/Kolkata'),'serverless'=>true,
  'media_driver'=>'cloudinary','cloudinary_cloud_name'=>$env('CLOUDINARY_CLOUD_NAME'),
