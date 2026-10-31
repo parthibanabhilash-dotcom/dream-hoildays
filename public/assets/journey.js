@@ -2,10 +2,11 @@ import * as THREE from './vendor/three.module.js';
 import {createBus,createFlight} from './travel-models.js';
 const holder=document.querySelector('#journey-canvas');
 const reduced=matchMedia('(prefers-reduced-motion: reduce)');
-if(holder&&!reduced.matches&&!navigator.connection?.saveData) boot();
+if(holder&&!reduced.matches) boot();
 function boot(){
- let renderer;try{renderer=new THREE.WebGLRenderer({alpha:true,antialias:true,powerPreference:'low-power'});}catch{return;}
- renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));holder.append(renderer.domElement);
+ const mobile=matchMedia('(max-width:760px), (pointer:coarse)').matches;
+ let renderer;try{renderer=new THREE.WebGLRenderer({alpha:true,antialias:!mobile,powerPreference:'low-power'});}catch{return;}
+ renderer.setPixelRatio(Math.min(devicePixelRatio||1,mobile?1:1.5));holder.append(renderer.domElement);
  const scene=new THREE.Scene(),camera=new THREE.PerspectiveCamera(36,1,.1,80);camera.position.set(10,9,13);camera.lookAt(0,0,0);
  scene.add(new THREE.HemisphereLight(0xffffff,0x537462,2.8));const light=new THREE.DirectionalLight(0xffefd2,3.5);light.position.set(-3,9,4);scene.add(light);
  const world=new THREE.Group();scene.add(world);
@@ -69,7 +70,8 @@ function boot(){
  if(theme==='road'){const path=roadPath,t=(time*.035)%1,p=path.getPointAt(t),tangent=path.getTangentAt(t);roadBus.position.copy(p);roadBus.position.y+=.23;roadBus.rotation.y=Math.atan2(-tangent.z,tangent.x);}
  floats.forEach((object,i)=>{if(!object.userData.base)object.userData.base=object.position.clone();const base=object.userData.base;object.position.y=base.y+Math.sin(time*(theme==='camp'?4:.7)+i)*.15;if(theme==='islands'){object.position.x=Math.sin(time*.3)*3;object.position.z=3+Math.cos(time*.3);object.rotation.y=-time*.3;}if(theme==='gallery')object.rotation.z=Math.sin(time*.5+i)*.08;if(theme==='flight')object.rotation.z=Math.sin(time*.7)*.07;});
  rings.forEach((r,i)=>{if(theme==='flight')r.rotation.z=time*.12*(i%2?1:-1);else r.scale.setScalar(1+Math.sin(time+i)*.04);});
- world.rotation.y+=(pointer*.18-world.rotation.y)*.035;renderer.render(scene,camera);holder.parentElement.classList.add('is-rendered');};
+ const turn=mobile?Math.sin(time*.25)*.09:pointer*.18;
+ world.rotation.y+=(turn-world.rotation.y)*.035;renderer.render(scene,camera);holder.parentElement.classList.add('is-rendered');};
  const resume=()=>{if(visible&&!document.hidden&&!reduced.matches&&!frame){last=performance.now();frame=requestAnimationFrame(render);}};
  new IntersectionObserver(entries=>{visible=entries[0].isIntersecting;resume();}).observe(holder);
  document.addEventListener('visibilitychange',resume);reduced.addEventListener('change',()=>{holder.parentElement.classList.toggle('is-rendered',!reduced.matches);resume();});holder.parentElement.addEventListener('pointermove',e=>{const r=holder.getBoundingClientRect();pointer=(e.clientX-r.left)/r.width-.5;});holder.parentElement.addEventListener('pointerleave',()=>pointer=0);

@@ -16,3 +16,6 @@
 .button:not(.secondary):not(.danger){background:#2b7050;color:#fff}.button:not(.secondary):not(.danger):hover{background:#225a40;color:#fff}.navy .button:not(.secondary){color:#fff}
 /* Mobile navigation icon, with expanded state driven by the existing toggle. */
 .menu-toggle{width:48px;height:48px;padding:12px;color:var(--navy);flex-shrink:0}.menu-icon{display:flex;flex-direction:column;justify-content:center;gap:5px;width:22px;height:22px;margin:auto}.menu-icon>span{display:block;width:22px;height:2px;border-radius:2px;background:currentColor;transition:transform .2s,opacity .2s}.menu-toggle[aria-expanded="true"] .menu-icon>span:nth-child(1){transform:translateY(7px) rotate(45deg)}.menu-toggle[aria-expanded="true"] .menu-icon>span:nth-child(2){opacity:0}.menu-toggle[aria-expanded="true"] .menu-icon>span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
+@media(max-width:760px) and (prefers-reduced-motion:no-preference){.hero-visual:not(.has-webgl) .static-globe{animation:mobile-globe 8s ease-in-out infinite alternate}.floating-label{animation:mobile-label 4s ease-in-out infinite alternate}}
+@keyframes mobile-globe{from{transform:rotate(-4deg)}to{transform:rotate(4deg)}}
+@keyframes mobile-label{from{translate:0 0}to{translate:0 -7px}}

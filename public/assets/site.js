@@ -17,9 +17,9 @@ document.querySelectorAll('.vehicle-booking').forEach(form=>form.addEventListene
 document.querySelectorAll('.enquiry-form').forEach(form=>form.addEventListener('submit',()=>{if(!form.checkValidity())return;const button=form.querySelector('button[type=submit]');button.disabled=true;button.textContent='Saving enquiry…';}));
 window.addEventListener('pageshow',()=>document.querySelectorAll('.enquiry-form button[type=submit]').forEach(b=>{b.disabled=false;b.textContent='Send Enquiry';}));
 const loadScript=src=>new Promise((resolve,reject)=>{const s=document.createElement('script');s.src=new URL(src,assets).href;s.onload=resolve;s.onerror=reject;document.head.append(s);});
-if(!reduced.matches){loadScript('vendor/gsap.min.js').then(()=>import(new URL('scroll-animations.js',assets).href)).then(module=>module.initScrollAnimations(window.gsap,reduced)).catch(()=>{});}
+if(!reduced.matches){loadScript('vendor/gsap.min.js').then(()=>import(new URL('scroll-animations.js?v=mobile-motion',assets).href)).then(module=>module.initScrollAnimations(window.gsap,reduced)).catch(()=>{});}
 if(!reduced.matches&&matchMedia('(hover:hover) and (pointer:fine)').matches)document.querySelectorAll('.tilt').forEach(card=>{card.addEventListener('pointermove',event=>{if(reduced.matches)return;const r=card.getBoundingClientRect();card.style.transform=`perspective(900px) rotateX(${-(event.clientY-r.top-r.height/2)/r.height*3}deg) rotateY(${(event.clientX-r.left-r.width/2)/r.width*3}deg)`;});card.addEventListener('pointerleave',()=>card.style.transform='');});
-const holder=document.querySelector('#globe');if(!holder||reduced.matches||navigator.connection?.saveData)return;
+const holder=document.querySelector('#globe');if(!holder||reduced.matches)return;
 const lowPower=innerWidth<760||(navigator.hardwareConcurrency&&navigator.hardwareConcurrency<=4);
 // No blocking load: the original static illustration remains until the first successful render.
 Promise.all([import(new URL('vendor/three.module.js',assets).href),import(new URL('travel-models.js',assets).href)]).then(([THREE,models])=>{

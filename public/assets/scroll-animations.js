@@ -1,6 +1,6 @@
 export function initScrollAnimations(gsap, reduced) {
   if (!gsap || reduced.matches || !('IntersectionObserver' in window)) return;
-  const selector = '.page-guide-copy, .page-guide-photo, .guide-card, .inspiration-photo-grid > figure, .about-hero-copy, .about-hero-visual, .about-story-photo, .about-story-copy, .hero-copy, .page-heading, .section-head, .category-title, .filters, .grid > .card, .gallery-grid > figure, .gallery-grid > .gallery-open, .empty, .booking-panel, .reading > .prose, .contact-grid > div, .itinerary, .site-footer .footer-grid > div';
+  const selector = '.journey-heading, .journey-landscape, .page-guide-copy, .page-guide-photo, .guide-card, .inspiration-photo-grid > figure, .about-hero-copy, .about-hero-visual, .about-story-photo, .about-story-copy, .hero-copy, .page-heading, .section-head, .category-title, .filters, .grid > .card, .gallery-grid > figure, .gallery-grid > .gallery-open, .empty, .booking-panel, .reading > .prose, .contact-grid > div, .itinerary, .site-footer .footer-grid > div';
   const candidates = [...document.querySelectorAll(selector)];
   const targets = candidates.filter(element => !candidates.some(parent => parent !== element && parent.contains(element)));
   const clear = element => {
